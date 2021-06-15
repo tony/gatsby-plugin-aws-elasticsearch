@@ -107,13 +107,17 @@ const listDocuments = async (options) => {
  * @return {Promise<void>}
  */
 const createDocument = async (_id, _document, options) => {
+  console.log('createDocument', 'POST', `_doc/${_id}`, _document, options);
+
   const [error, response] = await sendRequest('POST', `_doc/${_id}`, _document, options);
 
   if (error || !response) {
     // eslint-disable-next-line no-console
     console.log(_id, _document, options, error, response);
-    throw new Error('Failed to create document');
+    throw new Error('Failed to create document:', error, response);
   }
+
+  return [error, response];
 };
 
 /**
@@ -126,11 +130,14 @@ const createDocument = async (_id, _document, options) => {
  * @return {Promise<void>}
  */
 const updateDocument = async (_id, _document, options) => {
+  console.log('updateDocument', _id, _document, options);
   const [error, response] = await sendRequest('PUT', `_doc/${_id}`, _document, options);
 
   if (error || !response) {
-    throw new Error('Failed to update document');
+    throw new Error('Failed to update document:', error, response);
   }
+
+  return [error, response];
 };
 
 /**
@@ -144,8 +151,10 @@ const deleteDocument = async (_id, options) => {
   const [error, response] = await sendRequest('DELETE', `_doc/${_id}`, {}, options);
 
   if (error || !response) {
-    throw new Error('Failed to delete document');
+    throw new Error('Failed to delete document', error, response);
   }
+
+  return [error, response];
 };
 
 module.exports = {

@@ -3,6 +3,18 @@ const { createIndex, listDocuments, setMapping, getMapping } = require('./src/el
 const { checkDocument, checkNode } = require('./src/matcher');
 const { OptionsStruct } = require('./src/types');
 
+async function distributeWorkload(workers, count = 50) {
+  const methods = workers.slice();
+
+  async function task() {
+    while (methods.length > 0) {
+      await methods.pop()();
+    }
+  }
+
+  await Promise.all(new Array(count).fill(undefined).map(() => task()));
+}
+
 /**
  * Hooks into Gatsby's build process. This function fetches and parses the data to synchronise with AWS Elasticsearch.
  */
@@ -40,10 +52,29 @@ exports.createPagesStatefully = async ({ graphql, reporter }, rawOptions) => {
       });
     }
 
+    console.log('adding nodes');
     const nodes = options.selector(data).map((node) => options.toDocument(node));
+    console.log('lsiting documents');
     const documents = await listDocuments(options);
+    console.log('chekcing nodes', documents);
+    const bar = reporter.createProgress(`checking nodes`, nodes.length);
+    bar.start();
+    // await distributeWorkload(
+    //   nodes.map(async (node) => {
+    //     await checkNode(node, documents, options);
+    //     bar.tick();
+    //   }),
+    //   1
+    // );
+    await  Promise.all(nodes.map(async (node) => {
+        bar.tick();
 
-    await Promise.all(nodes.map((node) => checkNode(node, documents, options)));
+        return checkNode(node, documents, options);
+    }))
+
+    bar.done()
+
+    console.log('chekcing documents');
     await Promise.all(documents.map((document) => checkDocument(document, nodes, options)));
   } catch (error) {
     return reporter.panic('gatsby-plugin-elasticsearch-search: Failed to synchronise with Elasticsearch:', error);

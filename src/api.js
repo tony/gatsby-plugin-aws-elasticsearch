@@ -1,5 +1,5 @@
 const { sign } = require('aws4');
-const fetch = require('node-fetch');
+const axios = require('axios');
 
 /**
  * Sign a request with the AWS credentials.
@@ -68,24 +68,49 @@ const sendRequest = async (method, _path, _document, options) => {
       break;
   }
 
-  const response = await fetch(url.href, {
-    method: method,
-    body: request.body,
-    headers
-  });
+  let response;
+  const CancelToken = axios.CancelToken;
+  const source = CancelToken.source();
 
-  if (!response.ok) {
+  try {
+    response = await axios.request({
+      url: url.href,
+      method: method,
+      body: request.body,
+      headers,
+      cancelToken: source.token,
+      responseType: 'json'
+    });
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      console.error('fetch request:', request);
+      console.error('fetch error:', error);
+    } else {
+      console.error('non axios error', error);
+    }
+    source.cancel();
+    console.log('cancelling 0');
+    return [true, undefined];
+    // return [true, undefined];
+  }
+
+  if (response.status !== 200) {
     // TODO: Provide more information about error
     // eslint-disable-next-line no-console
-    console.error('body:', request.body);
+    console.error('body:', request.data);
     // eslint-disable-next-line no-console
     console.error('response:', response);
     // eslint-disable-next-line no-console
-    console.error('json:', await response.json());
+    console.error('json:', response.data);
+    source.cancel();
+    console.log('cancelling');
     return [true, undefined];
   }
 
-  return [false, await response.json()];
+  const responseData = response.data;
+  console.log('response', responseData);
+  // source.cancel();
+  return [false, responseData];
 };
 
 module.exports = { signRequest, sendRequest };
