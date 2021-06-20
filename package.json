@@ -45,6 +45,8 @@
   "dependencies": {
     "@babel/core": "^7.14.6",
     "@babel/eslint-parser": "^7.14.5",
+    "@elastic/elasticsearch": "^7.13.0",
+    "aws-elasticsearch-connector": "^9.0.3",
     "aws4": "^1.11.0",
     "node-fetch": "^2.6.1",
     "superstruct": "^0.15.2"
@@ -60,7 +62,6 @@
     "eslint-plugin-import": "^2.23.4",
     "eslint-plugin-jest": "^24.3.6",
     "gatsby": "^3.7.2",
-    "husky": "^6.0.0",
     "jest": "^27.0.4",
     "lint-staged": "^11.0.0",
     "prettier": "^2.3.1",
@@ -76,10 +77,5 @@
     "*.json": [
       "prettier --write"
     ]
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
   }
 }
