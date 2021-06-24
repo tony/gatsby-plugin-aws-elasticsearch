@@ -1,5 +1,6 @@
+/* eslint-disable no-console */
 const { validate } = require('superstruct');
-const { createIndex, listDocuments, setMapping, getMapping } = require('./src/elasticsearch');
+const { listDocuments } = require('./src/elasticsearch');
 const { checkDocument, checkNode } = require('./src/matcher');
 const { OptionsStruct } = require('./src/types');
 
@@ -10,23 +11,7 @@ const { OptionsStruct } = require('./src/types');
  * @param {Options} options
  * @param {object} data Set of data to upload (via gatsby graphql response)
  */
-const legacyUpsert = async (client, options, data) => {
-  // if (options.provider !== 'elastic.co') {
-  //   // elastic.co just uses 'documents' and doesn't accept other indexes/mappings
-  //   await createIndex(options);
-  //   const response = await getMapping(options);
-  //   const existingIndexes = response[options.index].mappings.properties;
-  //
-  //   await setMapping({
-  //     ...options,
-  //     mapping: Object.fromEntries(
-  //       Object.entries(options.mapping).filter(([key, _]) => {
-  //         return !Object.keys(existingIndexes || []).includes(key);
-  //       })
-  //     )
-  //   });
-  // }
-
+exports.legacyUpsert = async (client, options, data) => {
   const nodes = options.selector(data).map((node) => options.toDocument(node));
   const documents = await listDocuments(options);
 
@@ -45,19 +30,19 @@ const legacyUpsert = async (client, options, data) => {
  * @param {Options} options
  * @param {object} data Set of data to upload (via gatsby graphql response)
  */
-const upsertWithBulkHelper = async (client, options, data) => {
+exports.upsertWithBulkHelper = async (client, options, data) => {
   const dataset = options
     .selector(data)
     .map((node) => options.toDocument(node))
     .filter((doc) => {
       if (!doc) {
-        console.log('EMPTY', doc, _id);
+        console.log('EMPTY', doc);
       }
       return doc && doc.id;
     });
   // const body = dataset.flatMap((doc) => [{ index: { _index: options.index } }, doc]);
 
-  const res = await client.helpers.bulk({
+  await client.helpers.bulk({
     flushBytes: 10000,
     refreshOnCompletion: false,
     datasource: dataset,
@@ -90,7 +75,7 @@ const upsertWithBulk = async (client, options, data) => {
     .map((node) => options.toDocument(node))
     .filter((doc) => {
       if (!doc) {
-        console.log('EMPTY', doc, _id);
+        console.log('EMPTY', doc);
       }
       return doc && doc.id;
     });
@@ -156,11 +141,11 @@ exports.createPagesStatefully = async ({ graphql, reporter }, rawOptions) => {
     const client = new Client({ node: options.endpoint, ...clientOptions });
 
     try {
-      const { body: indices } = await client.cat.indices();
+      await client.cat.indices();
     } catch (error) {
       console.log(error);
     }
-    const response = await client.indices.create(
+    await client.indices.create(
       { index: options.index, body: { mappings: { properties: options.mapping } } },
       { ignore: [400] }
     );
