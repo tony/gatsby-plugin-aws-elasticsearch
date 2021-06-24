@@ -1,6 +1,6 @@
 {
   "name": "@tony/gatsby-plugin-elasticsearch-search",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "A plugin for Gatsby to synchronise content between Gatsby and Elasticsearch",
   "author": "Tony Narlock <tony@git-pull.com>",
   "homepage": "https://github.com/tony/gatsby-plugin-elasticsearch-search",
