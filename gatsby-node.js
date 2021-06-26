@@ -11,7 +11,7 @@ const { OptionsStruct } = require('./src/types');
  * @param {Options} options
  * @param {object} data Set of data to upload (via gatsby graphql response)
  */
-exports.legacyUpsert = async (client, options, data) => {
+const _legacyUpsert = async (client, options, data) => {
   const nodes = options.selector(data).map((node) => options.toDocument(node));
   const documents = await listDocuments(options);
 
@@ -30,7 +30,7 @@ exports.legacyUpsert = async (client, options, data) => {
  * @param {Options} options
  * @param {object} data Set of data to upload (via gatsby graphql response)
  */
-exports.upsertWithBulkHelper = async (client, options, data) => {
+const _upsertWithBulkHelper = async (client, options, data) => {
   const dataset = options
     .selector(data)
     .map((node) => options.toDocument(node))
